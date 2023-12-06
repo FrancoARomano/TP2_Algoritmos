@@ -6,7 +6,7 @@ from io import BytesIO
 
 class Pantalla_principal:
     
-    def __init__(self, master):
+    def __init__(self, master,informacion_local,ventana0):
         
         self.master = master
         self.master.geometry("900x900")
@@ -14,12 +14,19 @@ class Pantalla_principal:
         self.master.config(bg = "light gray")
         self.master.resizable(False, False)
         
+        self.ventana0=ventana0
         
-        self.creador_marcos()
-        self.buscador_con_boton()
-        self.creacion_botones()
+        self.informacion_local=informacion_local
         
-    def creador_marcos(self):
+        
+        self.lista_id_imagenes = self.funcion_id_imagenes(self.informacion_local)
+        
+        self.creador_marcos(self.informacion_local)
+        self.buscador_con_boton(self.informacion_local, self.lista_id_imagenes)
+        self.creacion_botones(self.lista_id_imagenes)
+    
+
+    def creador_marcos(self, informacion_local):
         
         lista_contenedores = []
         
@@ -46,11 +53,36 @@ class Pantalla_principal:
                 fila = 2 
                 columna = 0
             
-        self.creador_canvas_imagenes(lista_contenedores)
+        self.creador_canvas_imagenes(lista_contenedores, informacion_local)
+        
+    def funcion_id_imagenes(self, informacion_local):
+        
+        self.id_cine = int(informacion_local["cinema_id"])
+        
+        self.url_api_1 = f'http://vps-3701198-x.dattaweb.com:4000/cinemas/{self.id_cine}/movies'
+        self.token_1 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.DGI_v9bwNm_kSrC-CQSb3dBFzxOlrtBDHcEGXvCFqgU'
+        self.headers_1 = {'Authorization': f'Bearer {self.token_1}'}
+        self.id_ubicacion = requests.get(self.url_api_1, headers=self.headers_1)
+        
+        lista_id_peliculas = self.id_ubicacion.json()[0]["has_movies"]
+        
+        lista_para_for = [lista_id_peliculas[0], lista_id_peliculas[1], lista_id_peliculas[2], 
+                        lista_id_peliculas[3], lista_id_peliculas[4], lista_id_peliculas[5]]
+        
+        return lista_para_for
 
-    def creacion_botones(self):
+
+    def volver_pantalla_inicial_boton(self):
+        
+        self.master.withdraw()
+        
+        self.ventana0.deiconify()
+
+    def creacion_botones(self, lista_id_imagenes):
         
         posicion_y = 200
+        
+        iterar_imagenes = 0
         
         for n in range(1,7):
             
@@ -62,7 +94,11 @@ class Pantalla_principal:
             
             elif n == 5: posicion_y = 720
             
-            url_info_pelis_botones_ver = "http://vps-3701198-x.dattaweb.com:4000/movies/" + f"{n}"
+            if n == 1: n = 0
+            
+            url_info_pelis_botones_ver = "http://vps-3701198-x.dattaweb.com:4000/movies/" + f"{lista_id_imagenes[iterar_imagenes]}"
+            
+            iterar_imagenes += 1
         
             token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.DGI_v9bwNm_kSrC-CQSb3dBFzxOlrtBDHcEGXvCFqgU"
             headers= {"Authorization": f"Bearer {token}"} 
@@ -72,22 +108,30 @@ class Pantalla_principal:
             self.botones = tk.Button(self.master, text = "Ver", width = 10, height = 1, bd = "7",
                                     command = lambda dict_boton_ver = info_pelis_botones_ver.json():self.ir_pagina_secundaria(dict_boton_ver))
             
-            self.botones.place(x = posicion_x, y = posicion_y)        
+            self.botones.place(x = posicion_x, y = posicion_y)   
+        
+            
+        
+        boton_volver=tk.Button(self.master, text="<-- Volver", bg="Black",fg="White",bd=5,cursor="hand2",
+                            command=lambda: self.volver_pantalla_inicial_boton())
+        boton_volver.place(x=420,y=30)     
         
             
     def ir_pagina_secundaria(self, dict_info_peliculas):
         
         self.master.withdraw()
         
-        ventana_secundaria = tk.Toplevel()  
+        ventana_2 = tk.Tk()
         
-        diccionario_info_peliculas = dict_info_peliculas
-        print(dict_info_peliculas)
+        # pantalla_secundaria = Ventana2(ventana_2,dict_info_peliculas,self.master,self.informacion_local)
+        #IR A VENTANA 2
         
-    def verificar_pelicula(self, ingreso_del_usuario): 
         
-        for i in range(1, 7):
-            url_info_pelis = "http://vps-3701198-x.dattaweb.com:4000/movies/" + f"{i}"
+    def verificar_pelicula(self, ingreso_del_usuario, lista_id_imagenes): 
+        
+        for i in range(len(lista_id_imagenes)):
+            
+            url_info_pelis = "http://vps-3701198-x.dattaweb.com:4000/movies/" + f"{lista_id_imagenes[i]}"
             
             token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.DGI_v9bwNm_kSrC-CQSb3dBFzxOlrtBDHcEGXvCFqgU"
             headers= {"Authorization": f"Bearer {token}"}
@@ -102,7 +146,9 @@ class Pantalla_principal:
             
                 self.ir_pagina_secundaria(self.info_pelis.json())
             
-    def buscador_con_boton(self):
+    def buscador_con_boton(self, informacion_local, lista_id_imagenes):
+        
+        ubicacion = informacion_local["location"]
         
         ingreso_del_usuario = tk.StringVar(self.master)
         
@@ -111,36 +157,32 @@ class Pantalla_principal:
         
         
         self.boton_buscar = tk.Button(self.master, text = "Buscar Película",
-                                    width = 15, command = lambda: self.verificar_pelicula( ingreso_del_usuario.get()))
+                                    width = 15, command = lambda: self.verificar_pelicula(ingreso_del_usuario.get(), lista_id_imagenes))
         self.boton_buscar.place(x = 395, y = 350)
         
-        self.etiqueta_ubicacion = tk.Label(self.master, text = "Usted está en el cine de { ubicacion }", bg = "light gray",
+        self.etiqueta_ubicacion = tk.Label(self.master, text = f"Usted está en el cine de {ubicacion}", bg = "light gray",
                                         justify = "center").place(x = 355, y = 730)
         
-    def crear_imagen(self) -> any:
-        self.url_api = 'http://vps-3701198-x.dattaweb.com:4000/posters/2'
-        self.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.DGI_v9bwNm_kSrC-CQSb3dBFzxOlrtBDHcEGXvCFqgU'
-        self.headers = {'Authorization': f'Bearer {self.token}'}
-        self.response = requests.get(self.url_api, headers=self.headers)
+
+    def creador_canvas_imagenes(self, lista_contenedores, informacion_local):
         
-        self.codigo_base64 = self.response.content.decode("utf-8")
-        self.codigo_base64 = self.codigo_base64.split(",", 1)[1]
+        self.id_cine = int(informacion_local["cinema_id"])
         
-        self.longitud_requerida = len(self.codigo_base64) + (4 - len(self.codigo_base64) % 4) % 4
-        self.codigo_base64_padded = self.codigo_base64.ljust(self.longitud_requerida, "=")
+        self.url_api_1 = f'http://vps-3701198-x.dattaweb.com:4000/cinemas/{self.id_cine}/movies'
+        self.token_1 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.DGI_v9bwNm_kSrC-CQSb3dBFzxOlrtBDHcEGXvCFqgU'
+        self.headers_1 = {'Authorization': f'Bearer {self.token_1}'}
+        self.id_ubicacion = requests.get(self.url_api_1, headers=self.headers_1)
         
-        self.imagen_bytes = base64.b64decode(self.codigo_base64_padded)
-        self.imagen_pillow = Image.open(BytesIO(self.imagen_bytes))
-        self.tk_imagen = ImageTk.PhotoImage(self.imagen_pillow)
-        return self.tk_imagen
+        lista_id_peliculas = self.id_ubicacion.json()[0]["has_movies"]
         
-    def creador_canvas_imagenes(self, lista_contenedores):
+        lista_para_for = [lista_id_peliculas[0], 0, lista_id_peliculas[1], lista_id_peliculas[2], 0,
+                        lista_id_peliculas[3], lista_id_peliculas[4], 0, lista_id_peliculas[5]]
         
         lista_imagenes = []
         
-        for i in (1,0,2,3,0,4,5,0,6):
+        for i in lista_para_for:
             
-            if i == 0 or i == 0: 
+            if i == 0: 
                 lista_imagenes.append(0)
                 continue
             
@@ -153,14 +195,16 @@ class Pantalla_principal:
             self.codigo_base64 = self.codigo_base64.split(",", 1)[1]
             
             self.longitud_requerida = len(self.codigo_base64) + (4 - len(self.codigo_base64) % 4) % 4
-            self.codigo_base64_padded = self.codigo_base64.ljust(self.longitud_requerida, "=")
+            self.codigo_base64_modificado = self.codigo_base64.ljust(self.longitud_requerida, "=")
             
-            self.imagen_bytes = base64.b64decode(self.codigo_base64_padded)
+            self.imagen_bytes = base64.b64decode(self.codigo_base64_modificado)
             
             lista_imagenes.append(self.imagen_bytes)
-
+            
         for i in range(len(lista_imagenes)):
-            if lista_imagenes[i] == 0: continue
+            
+            if lista_imagenes[i] == 0: 
+                continue
             
             canvas_general = tk.Canvas(lista_contenedores[i], bg = "black", height = 260, width = 300, borderwidth = 0, highlightthickness = 0)
             canvas_general.grid(row = 0, column = 0, sticky = "nesw", padx = 0, pady = 0)
@@ -168,8 +212,6 @@ class Pantalla_principal:
             imagen_en_canvas = Image.open(BytesIO(lista_imagenes[i]))
             canvas_general.image = ImageTk.PhotoImage(imagen_en_canvas.resize((135, 192), Image.LANCZOS))
             canvas_general.create_image((300 - 135) / 2, (200 - 192) / 2, image = canvas_general.image, anchor = 'nw')
-            
-
 
 def main():
     ventana_principal = tk.Tk()
