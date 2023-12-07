@@ -1,0 +1,55 @@
+class Qr_ventana():
+    
+    def __init__(self,ventanaqr,info_qr, total) -> None:
+        
+        self.qrVentana=ventanaqr
+        self.qrVentana.config(bg="Black")
+        self.qrVentana.title("Escanea tu codigo")
+        self.qrVentana.resizable(width=False, height=False)
+        self.info_qr=info_qr
+        self.total=total
+        self.frame=tk.Frame(self.qrVentana)
+        self.frame.pack()
+        self.agregar_qr()
+        
+        
+    def agregar_qr(self):
+        
+        
+        self.qr = qrcode.QRCode()
+        
+        data=[]
+        
+        fecha_compra = datetime.now().strftime("Hoy: %d /%mhora:%Hhs:%Mmin") #%Y-%m-%d-%H-%M"
+        
+        data.append(f"Fecha de compra: {fecha_compra}") 
+        
+        id_qr_num=str(random.randint(11111,99999))
+        
+        data.append(f"id_QR: {id_qr_num}")
+        
+        for i in self.info_qr:
+            
+            if i=="Pelicula" or i=="Entradas":
+                data.append(f"{i}: {self.info_qr[i]}")
+            
+        data.append(f"TOTAL A PAGAR: ${self.total}")
+        
+        data_str = ", ".join(data)
+        
+        creacion_qr=qrcode.make(data_str)
+
+        ruta=f"ID_{id_qr_num}.png"
+
+        with open(ruta, "wb") as qr_save:
+            creacion_qr.save(qr_save)
+        
+        imagen = Image.open(ruta)
+
+        imagen.save(f"C:/Users/Sasel consultoria/Desktop/QR/{id_qr_num}.pdf")
+
+        img = ImageTk.PhotoImage(imagen)
+
+        etiqueta_imagen = tk.Label(self.frame, image=img, bd=7,relief="groove")
+        etiqueta_imagen.image = img 
+        etiqueta_imagen.pack()
