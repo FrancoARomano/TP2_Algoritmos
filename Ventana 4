@@ -1,0 +1,99 @@
+class Ventana4():
+    
+    def __init__(self,ventana4, informacion:dict) -> None:
+        
+        self.ventana4=ventana4
+        self.ventana4.title("Checkout")
+        self.ventana4.geometry("500x700+550+50")
+        self.ventana4.config(background="Black")
+        self.ventana4.resizable(width=False, height=False)
+        
+        self.informacion:dict=informacion
+        
+        self.crear_frames()
+        
+        
+    def crear_frames(self)-> None:
+        
+        #FRAME INFORMACION
+        self.frame_informacion=tk.Frame(self.ventana4,bg="grey", width=450,height=550)
+        self.frame_informacion.pack(pady=30)
+        
+        #FRAME PAGAR
+        self.frame_ejecutar_compra=tk.Frame(self.ventana4,bg="red", width=200,height=150)
+        self.frame_ejecutar_compra.pack(pady=5)
+        
+        self.crear_etiquetas()
+        
+        
+    def ir_a_qr(self)-> None:
+        
+        self.ventana4.withdraw()
+        
+        qrventana=tk.Toplevel()
+    
+        mostrarQR=Qr_ventana(qrventana, self.informacion,self.total)
+        
+        
+    def crear_etiquetas(self)-> None:
+        
+        #TITULO general:
+        self.etiqueta_titulo=tk.Label(self.frame_informacion,text=self.informacion["Pelicula"], bg="white",
+                font=["Arial",16],bd=8, relief="sunken" )
+        self.etiqueta_titulo.place(x=1,y=10)
+        
+        #TITULO De Entradas:
+        self.etiqueta_titulo_entrada=tk.Label(self.frame_informacion,text="Entradas:", bg="white",
+                font=["Arial",20],bd=5, relief="groove" )
+        self.etiqueta_titulo_entrada.place(x=5,y=80)
+        
+        #TITULO De Snacks:
+        self.etiqueta_titulo_snacks=tk.Label(self.frame_informacion,text="Snacks:", bg="white",
+                font=["Arial",20],bd=5, relief="groove" )
+        self.etiqueta_titulo_snacks.place(x=260,y=80)
+        
+        fila:int=0
+        
+        #ETIQUETA De Entradas:
+        for elemento in self.informacion:
+            
+            if elemento!="Snacks" and elemento!="Pelicula":
+                
+                texto=f"{elemento}: {self.informacion[elemento]}"
+                
+                self.etiqueta_informacion_entrada=tk.Label(self.frame_informacion,text=texto,
+                    font=["Arial",15],bd=3, relief="sunken",bg="grey")
+                self.etiqueta_informacion_entrada.place(x=5,y=160+60*fila)            
+                
+                fila+=1    
+            
+    
+        fila:int=0
+        
+        #ETIQUETA De Snacks:
+        for elemento in self.informacion:
+            
+            if elemento=="Snacks":
+                
+                for snacks in self.informacion[elemento]:
+                    if self.informacion[elemento][snacks]!=0:
+                        texto=f"{snacks}: {self.informacion[elemento][snacks]}"
+                        
+                        self.etiqueta_informacion_snacks=tk.Label(self.frame_informacion,text=texto,
+                            font=["Arial",15],bd=3, relief="sunken",bg="grey")
+                        self.etiqueta_informacion_snacks.place(x=260,y=150+50*fila)
+
+                        fila+=1
+                    
+        #ETIQUETA total:
+        self.total=self.informacion["Snacks"]["Monto"]+self.informacion["Monto"]
+        
+        self.etiqueta_total=tk.Label(self.frame_informacion,text=f"\nTOTAL:  {self.total} \n",
+                font=["Arial",13,"bold"], relief="sunken",bg="black",fg="White",bd=10)
+        self.etiqueta_total.place(x=5,y=470)
+        
+        #BOTON pagar
+        self.boton_ejecutar_compra=tk.Button(self.frame_ejecutar_compra, text="Pagar",
+            bg="red",fg="black",font={"Arial", 25},relief="groove",bd=5,width=40,height=2,
+            command=lambda: self.ir_a_qr())
+        self.boton_ejecutar_compra.pack()
